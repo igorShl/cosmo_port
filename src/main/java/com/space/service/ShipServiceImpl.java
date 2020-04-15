@@ -38,10 +38,10 @@ public class ShipServiceImpl implements ShipService{
 
     public void deleteShip(String id) {
         Long shipId = checkIdForValidAndParseIt(id);
-        if (!shipRepository.existsById(Long.parseLong(id))) {
+        if (!shipRepository.existsById(shipId)) {
             throw new ShipNotFoundException();
         }
-        shipRepository.deleteById(Long.parseLong(id));
+        shipRepository.deleteById(shipId);
     }
 
     public Ship updateShip(Ship ship, String id) {
@@ -50,30 +50,30 @@ public class ShipServiceImpl implements ShipService{
             throw new ShipNotFoundException();
         }
         checkShipParams(ship);
-        Ship updatedShip = shipRepository.getOne(shipId);
+        Ship needToBeUpdateShip = shipRepository.findById(shipId).get();
         if (ship.getName() != null) {
-            updatedShip.setName(ship.getName());
+            needToBeUpdateShip.setName(ship.getName());
         }
         if (ship.getPlanet() != null) {
-            updatedShip.setPlanet(ship.getPlanet());
+            needToBeUpdateShip.setPlanet(ship.getPlanet());
         }
         if (ship.getShipType() != null) {
-            updatedShip.setShipType(ship.getShipType());
+            needToBeUpdateShip.setShipType(ship.getShipType());
         }
         if (ship.getProdDate() != null) {
-            updatedShip.setProdDate(ship.getProdDate());
+            needToBeUpdateShip.setProdDate(ship.getProdDate());
         }
         if (ship.getUsed() != null) {
-            updatedShip.setUsed(ship.getUsed());
+            needToBeUpdateShip.setUsed(ship.getUsed());
         }
         if (ship.getSpeed() != null) {
-            updatedShip.setSpeed(ship.getSpeed());
+            needToBeUpdateShip.setSpeed(ship.getSpeed());
         }
         if (ship.getCrewSize() != null) {
-            updatedShip.setCrewSize(ship.getCrewSize());
+            needToBeUpdateShip.setCrewSize(ship.getCrewSize());
         }
-        updatedShip.setRating(getShipRating(updatedShip));
-        return shipRepository.saveAndFlush(updatedShip);
+        needToBeUpdateShip.setRating(getShipRating(needToBeUpdateShip));
+        return shipRepository.saveAndFlush(needToBeUpdateShip);
     }
 
     public Ship getShip(String id) {
@@ -87,7 +87,7 @@ public class ShipServiceImpl implements ShipService{
     public Integer getShipsCount(String name, String planet, ShipType shipType, Long after, Long before,
                                  Boolean isUsed, Double minSpeed, Double maxSpeed, Integer minCrewSize,
                                  Integer maxCrewSize, Double minRating, Double maxRating) {
-        return getFilterShipsList(name, planet, shipType, after, before, isUsed, minSpeed,
+        return getFilteredShipsList(name, planet, shipType, after, before, isUsed, minSpeed,
                 maxSpeed, minCrewSize, maxCrewSize, minRating, maxRating).size();
     }
 
@@ -97,32 +97,32 @@ public class ShipServiceImpl implements ShipService{
                                    Integer maxCrewSize, Double minRating, Double maxRating,
                                    ShipOrder order, Integer pageNumber, Integer pageSize) {
 
-        List<Ship> filterShipsList = getFilterShipsList(name, planet, shipType, after, before, isUsed, minSpeed,
+        List<Ship> filteredShipsList = getFilteredShipsList(name, planet, shipType, after, before, isUsed, minSpeed,
                 maxSpeed, minCrewSize, maxCrewSize, minRating, maxRating);
         switch (order) {
             case ID:
-                Collections.sort(filterShipsList, (ship1, ship2) -> {
+                Collections.sort(filteredShipsList, (ship1, ship2) -> {
                     if (ship1.getId() > ship2.getId()) return 1;
                     else if (ship1.getId() < ship2.getId()) return -1;
                     return 0;
                 });
                 break;
             case SPEED:
-                Collections.sort(filterShipsList, (ship1, ship2) -> {
+                Collections.sort(filteredShipsList, (ship1, ship2) -> {
                     if (ship1.getSpeed() > ship2.getSpeed()) return 1;
                     else if (ship1.getSpeed() < ship2.getSpeed()) return -1;
                     return 0;
                 });
                 break;
             case RATING:
-                Collections.sort(filterShipsList, (ship1, ship2) -> {
+                Collections.sort(filteredShipsList, (ship1, ship2) -> {
                     if (ship1.getRating() > ship2.getRating()) return 1;
                     else if (ship1.getRating() < ship2.getRating()) return -1;
                     return 0;
                 });
                 break;
             case DATE:
-                Collections.sort(filterShipsList, (ship1, ship2) -> {
+                Collections.sort(filteredShipsList, (ship1, ship2) -> {
                     if (ship1.getProdDate().getTime() > ship2.getProdDate().getTime()) return 1;
                     else if (ship1.getProdDate().getTime() < ship2.getProdDate().getTime()) return -1;
                     return 0;
@@ -132,7 +132,7 @@ public class ShipServiceImpl implements ShipService{
         List<Ship> resultShipsList = new ArrayList<>();
         for (int i = 0; i < pageSize; i++) {
             try {
-                resultShipsList.add(filterShipsList.get(i + pageNumber * pageSize));
+                resultShipsList.add(filteredShipsList.get(i + pageNumber * pageSize));
             } catch (IndexOutOfBoundsException e) {
                 return resultShipsList;
             }
@@ -140,49 +140,49 @@ public class ShipServiceImpl implements ShipService{
         return resultShipsList;
     }
 
-    private List<Ship> getFilterShipsList(String name, String planet, ShipType shipType, Long after,
-                                          Long before, Boolean isUsed, Double minSpeed, Double maxSpeed,
-                                          Integer minCrewSize, Integer maxCrewSize, Double minRating,
-                                          Double maxRating) {
-        List<Ship> filtShipsList = shipRepository.findAll();
-        for (int i = 0; i < filtShipsList.size(); ) {
+    private List<Ship> getFilteredShipsList(String name, String planet, ShipType shipType, Long after,
+                                            Long before, Boolean isUsed, Double minSpeed, Double maxSpeed,
+                                            Integer minCrewSize, Integer maxCrewSize, Double minRating,
+                                            Double maxRating) {
+        List<Ship> filteredShipsList = shipRepository.findAll();
+        for (int i = 0; i < filteredShipsList.size(); ) {
             boolean isOkForRequest = true;
 
             Calendar calendar = Calendar.getInstance();
-            calendar.setTime(filtShipsList.get(i).getProdDate());
-            int shipYear = calendar.get(Calendar.YEAR);
-            int beforeYear = -1;
-            int afterYear = -1;
+            calendar.setTime(filteredShipsList.get(i).getProdDate());
+            int shipProdYear = calendar.get(Calendar.YEAR);
+            int beforeYearRequest = -1;
+            int afterYearRequest = -1;
             if (before != null) {
                 calendar.setTime(new Date(before));
-                beforeYear = calendar.get(Calendar.YEAR);
+                beforeYearRequest = calendar.get(Calendar.YEAR);
             }
             if (after != null) {
                 calendar.setTime(new Date(after));
-                afterYear = calendar.get(Calendar.YEAR);
+                afterYearRequest = calendar.get(Calendar.YEAR);
             }
 
-            if (name != null && !filtShipsList.get(i).getName().contains(name)) isOkForRequest = false;
-            if (planet != null && !filtShipsList.get(i).getPlanet().contains(planet)) isOkForRequest = false;
-            if (shipType != null && filtShipsList.get(i).getShipType() != shipType) isOkForRequest = false;
-            if (after != null && shipYear < afterYear) isOkForRequest = false;
-            if (before != null && shipYear > beforeYear) isOkForRequest = false;
-            if (isUsed != null && !filtShipsList.get(i).getUsed().equals(isUsed)) isOkForRequest = false;
-            if (minSpeed != null && filtShipsList.get(i).getSpeed() < minSpeed) isOkForRequest = false;
-            if (maxSpeed != null && filtShipsList.get(i).getSpeed() > maxSpeed) isOkForRequest = false;
-            if (minCrewSize != null && filtShipsList.get(i).getCrewSize() < minCrewSize) isOkForRequest = false;
-            if (maxCrewSize != null && filtShipsList.get(i).getCrewSize() > maxCrewSize) isOkForRequest = false;
-            if (minRating != null && filtShipsList.get(i).getRating() < minRating) isOkForRequest = false;
-            if (maxRating != null && filtShipsList.get(i).getRating() > maxRating) isOkForRequest = false;
+            if (name != null && !filteredShipsList.get(i).getName().contains(name)) isOkForRequest = false;
+            if (planet != null && !filteredShipsList.get(i).getPlanet().contains(planet)) isOkForRequest = false;
+            if (shipType != null && filteredShipsList.get(i).getShipType() != shipType) isOkForRequest = false;
+            if (after != null && shipProdYear < afterYearRequest) isOkForRequest = false;
+            if (before != null && shipProdYear > beforeYearRequest) isOkForRequest = false;
+            if (isUsed != null && !filteredShipsList.get(i).getUsed().equals(isUsed)) isOkForRequest = false;
+            if (minSpeed != null && filteredShipsList.get(i).getSpeed() < minSpeed) isOkForRequest = false;
+            if (maxSpeed != null && filteredShipsList.get(i).getSpeed() > maxSpeed) isOkForRequest = false;
+            if (minCrewSize != null && filteredShipsList.get(i).getCrewSize() < minCrewSize) isOkForRequest = false;
+            if (maxCrewSize != null && filteredShipsList.get(i).getCrewSize() > maxCrewSize) isOkForRequest = false;
+            if (minRating != null && filteredShipsList.get(i).getRating() < minRating) isOkForRequest = false;
+            if (maxRating != null && filteredShipsList.get(i).getRating() > maxRating) isOkForRequest = false;
 
             if (isOkForRequest) {
                 i++;
             }
             else {
-                filtShipsList.remove(i);
+                filteredShipsList.remove(i);
             }
         }
-        return filtShipsList;
+        return filteredShipsList;
     }
 
     private double getShipRating(Ship ship) {
