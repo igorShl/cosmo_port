@@ -31,12 +31,13 @@ public class ShipServiceImpl implements ShipService{
         checkShipParams(ship);
         double rating = getShipRating(ship);
         ship.setRating(rating);
-        ship.setSpeed((double) Math.round(ship.getSpeed()*100) / 100);
+        double roundedShipSpeed = Double.parseDouble(String.format("%.2f", ship.getSpeed()).replaceAll(",", "."));
+        ship.setSpeed(roundedShipSpeed);
         return shipRepository.saveAndFlush(ship);
     }
 
     public void deleteShip(String id) {
-        checkIdForValid(id);
+        Long shipId = checkIdForValidAndParseIt(id);
         if (!shipRepository.existsById(Long.parseLong(id))) {
             throw new ShipNotFoundException();
         }
@@ -44,7 +45,7 @@ public class ShipServiceImpl implements ShipService{
     }
 
     public Ship updateShip(Ship ship, String id) {
-        Long shipId = checkIdForValid(id);
+        Long shipId = checkIdForValidAndParseIt(id);
         if (!shipRepository.existsById(shipId)) {
             throw new ShipNotFoundException();
         }
@@ -76,7 +77,7 @@ public class ShipServiceImpl implements ShipService{
     }
 
     public Ship getShip(String id) {
-        Long shipId = checkIdForValid(id);
+        Long shipId = checkIdForValidAndParseIt(id);
         if (!shipRepository.existsById(shipId)) {
             throw new ShipNotFoundException();
         }
@@ -184,18 +185,17 @@ public class ShipServiceImpl implements ShipService{
         return filtShipsList;
     }
 
-
     private double getShipRating(Ship ship) {
-        double k = (ship.getUsed()) ? 0.5 : 1;
+        double usedCoefficient = (ship.getUsed()) ? 0.5 : 1;
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(ship.getProdDate());
         int prodYear = calendar.get(Calendar.YEAR);
-        double rating = (80 * ship.getSpeed() * k) / (3019 - prodYear +1);
-        rating = (double) Math.round(rating * 100) / 100;
+        double rating = (80 * ship.getSpeed() * usedCoefficient) / (3019 - prodYear +1);
+        rating = Double.parseDouble(String.format("%.2f", rating).replaceAll(",", "."));
         return rating;
     }
 
-    private Long checkIdForValid(String id) {
+    private Long checkIdForValidAndParseIt(String id) {
         Long shipId = null;
         try {
             shipId = Long.parseLong(id);
