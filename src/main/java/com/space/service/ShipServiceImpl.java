@@ -148,25 +148,28 @@ public class ShipServiceImpl implements ShipService{
         for (int i = 0; i < filteredShipsList.size(); ) {
             boolean isOkForRequest = true;
 
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(filteredShipsList.get(i).getProdDate());
-            int shipProdYear = calendar.get(Calendar.YEAR);
-            int beforeYearRequest = -1;
-            int afterYearRequest = -1;
-            if (before != null) {
-                calendar.setTime(new Date(before));
-                beforeYearRequest = calendar.get(Calendar.YEAR);
-            }
-            if (after != null) {
-                calendar.setTime(new Date(after));
-                afterYearRequest = calendar.get(Calendar.YEAR);
-            }
+            long shipProdDateInMillis = filteredShipsList.get(i).getProdDate().getTime();
+//            Calendar calendar = Calendar.getInstance();
+//            calendar.setTime(filteredShipsList.get(i).getProdDate());
+//            int shipProdYear = calendar.get(Calendar.YEAR);
+//            int beforeYearRequest = -1;
+//            int afterYearRequest = -1;
+//            if (before != null) {
+//                calendar.setTime(new Date(before));
+//                beforeYearRequest = calendar.get(Calendar.YEAR);
+//            }
+//            if (after != null) {
+//                calendar.setTime(new Date(after));
+//                afterYearRequest = calendar.get(Calendar.YEAR);
+//            }
 
             if (name != null && !filteredShipsList.get(i).getName().contains(name)) isOkForRequest = false;
             if (planet != null && !filteredShipsList.get(i).getPlanet().contains(planet)) isOkForRequest = false;
             if (shipType != null && filteredShipsList.get(i).getShipType() != shipType) isOkForRequest = false;
-            if (after != null && shipProdYear < afterYearRequest) isOkForRequest = false;
-            if (before != null && shipProdYear > beforeYearRequest) isOkForRequest = false;
+//            if (after != null && shipProdYear < afterYearRequest) isOkForRequest = false;
+//            if (before != null && shipProdYear > beforeYearRequest) isOkForRequest = false;
+            if (after != null && shipProdDateInMillis < after) isOkForRequest = false;
+            if (before != null && shipProdDateInMillis > before) isOkForRequest = false;
             if (isUsed != null && !filteredShipsList.get(i).getUsed().equals(isUsed)) isOkForRequest = false;
             if (minSpeed != null && filteredShipsList.get(i).getSpeed() < minSpeed) isOkForRequest = false;
             if (maxSpeed != null && filteredShipsList.get(i).getSpeed() > maxSpeed) isOkForRequest = false;
