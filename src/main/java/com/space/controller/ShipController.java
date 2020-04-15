@@ -6,16 +6,20 @@ import com.space.service.ShipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.sql.SQLException;
 import java.util.List;
 
 @RestController
 @RequestMapping("/rest")
 public class ShipController {
 
-    @Autowired
     private ShipService shipService;
+
+    @Autowired
+    public void setShipService(ShipService shipService) {
+        this.shipService = shipService;
+    }
+
+
 
     @RequestMapping(value = "/ships", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
@@ -24,11 +28,15 @@ public class ShipController {
         return shipService.addShip(ship);
     }
 
+
+
     @RequestMapping(value = "/ships/{id}", method = RequestMethod.DELETE)
     @ResponseStatus(HttpStatus.OK)
     public void deleteShip(@PathVariable (value = "id") String id) {
         shipService.deleteShip(id);
     }
+
+
 
     @RequestMapping(value = "/ships/{id}", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
@@ -38,12 +46,16 @@ public class ShipController {
         return shipService.updateShip(ship, id);
     }
 
+
+
     @RequestMapping(value = "/ships/{id}", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public Ship getShip(@PathVariable (value = "id") String id) {
         return shipService.getShip(id);
     }
+
+
 
     @RequestMapping(value = "/ships", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
@@ -66,6 +78,8 @@ public class ShipController {
         return shipService.getShipsList(name, planet, shipType, after, before, isUsed, minSpeed, maxSpeed,
                 minCrewSize, maxCrewSize, minRating, maxRating, order, pageNumber, pageSize);
     }
+
+
 
     @RequestMapping(value = "/ships/count", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)

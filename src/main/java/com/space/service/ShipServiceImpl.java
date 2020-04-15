@@ -9,8 +9,6 @@ import com.space.exceptions.ShipNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.sql.*;
 import java.sql.Date;
 import java.util.*;
 
@@ -18,8 +16,12 @@ import java.util.*;
 @Transactional
 public class ShipServiceImpl implements ShipService{
 
-    @Autowired
     private ShipRepository shipRepository;
+
+    @Autowired
+    public void setShipRepository(ShipRepository shipRepository) {
+        this.shipRepository = shipRepository;
+    }
 
     public Ship addShip(Ship ship) {
         if (ship.getUsed() == null) {
